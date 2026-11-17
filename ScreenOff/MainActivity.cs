@@ -5,10 +5,12 @@ using Android.Util;
 namespace ScreenOff;
 
 [Activity(Label = "@string/app_name", MainLauncher = true, Exported = true,
-    ExcludeFromRecents = true, Theme = "@android:style/Theme.Material.Light.NoActionBar")]
+    ExcludeFromRecents = true, Theme = "@style/ScreenOffTheme")]
 public class MainActivity : Activity
 {
     private const int ActivateAdminRequest = 1;
+    private bool _hasResumed;
+    private bool _lockRequested;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -27,6 +29,18 @@ public class MainActivity : Activity
             intent.PutExtra(DevicePolicyManager.ExtraAddExplanation, GetString(Resource.String.admin_explanation));
             StartActivityForResult(intent, ActivateAdminRequest);
         }
+    }
+
+    protected override void OnResume()
+    {
+        base.OnResume();
+
+        if (_hasResumed && _lockRequested && !((KeyguardManager)GetSystemService(KeyguardService)!).IsKeyguardLocked)
+        {
+            FinishAndRemoveTask();
+        }
+
+        _hasResumed = true;
     }
 
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
@@ -68,8 +82,7 @@ public class MainActivity : Activity
             return;
         }
 
-        FinishAndRemoveTask();
-        Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
+        _lockRequested = true;
     }
 
     private sealed class CloseListener(MainActivity activity) : Java.Lang.Object, IDialogInterfaceOnCancelListener

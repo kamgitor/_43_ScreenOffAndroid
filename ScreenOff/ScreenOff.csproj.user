@@ -1,9 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <SelectedDevice>Google Pixel 8 Pro</SelectedDevice>
+    <SelectedDevice>pixel_7_-_api_36_0</SelectedDevice>
     <SelectedPlatformGroup>PhysicalDevice</SelectedPlatformGroup>
-    <ActiveDebugProfile>Google Pixel 8 Pro (Android 17.0 - API 37)</ActiveDebugProfile>
+    <ActiveDebugProfile>Google Pixel 8 Pro</ActiveDebugProfile>
     <ActiveDebugFramework>net11.0-android</ActiveDebugFramework>
+    <DefaultDevice>pixel_7_-_api_36_0</DefaultDevice>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

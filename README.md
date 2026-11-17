@@ -7,11 +7,13 @@ Requires .NET 11 Android workload and Android 7.0 (API 24) or newer.
 Install and launch ScreenOff on an Android device. On first launch, explicitly
 activate its device administrator permission. The only requested policy is
 force-lock. After activation, launching the application locks the device and
-turns off its screen, removes the activity from recents and kills its own process.
-If permission is denied, the application explains why it cannot lock and closes.
+turns off its screen and removes the activity from recents. Android manages the
+application process after the activity closes. If permission is denied, the
+application explains why it cannot lock and closes.
 
-This locks the device; it is not just a brightness change. Depending on Android
-and device policy, unlocking may require the PIN/password rather than biometrics.
+This locks the device; it is not just a brightness change. Android requires the
+primary PIN/password/pattern after `DevicePolicyManager.LockNow()` before biometrics
+can be used again. This is enforced by Android and cannot be changed by the app.
 To uninstall, first deactivate ScreenOff under Settings > Security > Device admin
 apps (the exact settings path varies by manufacturer).
 Android may start the process again for system-delivered administrator events;
