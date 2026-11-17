@@ -1,5 +1,8 @@
-﻿using Android.App.Admin;
+﻿using Android.AccessibilityServices;
+using Android.App.Admin;
 using Android.Content;
+using Android.OS;
+using Android.Provider;
 using Android.Util;
 
 namespace ScreenOff;
@@ -8,81 +11,109 @@ namespace ScreenOff;
     ExcludeFromRecents = true, Theme = "@style/ScreenOffTheme")]
 public class MainActivity : Activity
 {
-    private const int ActivateAdminRequest = 1;
-    private bool _hasResumed;
+    private bool _waitingForSettings;
     private bool _lockRequested;
+    private bool _dialogShown;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        _waitingForSettings = savedInstanceState?.GetBoolean("waitingForSettings") ?? false;
+        _lockRequested = savedInstanceState?.GetBoolean("lockRequested") ?? false;
+    }
 
-        var policyManager = (DevicePolicyManager)GetSystemService(DevicePolicyService)!;
-        var admin = new ComponentName(this, Java.Lang.Class.FromType(typeof(LockDeviceAdminReceiver)));
-        if (policyManager.IsAdminActive(admin))
-        {
-            LockAndExit(policyManager);
-        }
-        else if (savedInstanceState is null)
-        {
-            var intent = new Intent(DevicePolicyManager.ActionAddDeviceAdmin);
-            intent.PutExtra(DevicePolicyManager.ExtraDeviceAdmin, admin);
-            intent.PutExtra(DevicePolicyManager.ExtraAddExplanation, GetString(Resource.String.admin_explanation));
-            StartActivityForResult(intent, ActivateAdminRequest);
-        }
+    protected override void OnSaveInstanceState(Bundle outState)
+    {
+        outState.PutBoolean("waitingForSettings", _waitingForSettings);
+        outState.PutBoolean("lockRequested", _lockRequested);
+        base.OnSaveInstanceState(outState);
     }
 
     protected override void OnResume()
     {
         base.OnResume();
 
-        if (_hasResumed && _lockRequested && !((KeyguardManager)GetSystemService(KeyguardService)!).IsKeyguardLocked)
+        if (_lockRequested)
         {
-            FinishAndRemoveTask();
+            if (!((KeyguardManager)GetSystemService(KeyguardService)!).IsKeyguardLocked)
+            {
+                FinishAndRemoveTask();
+            }
+            return;
         }
 
-        _hasResumed = true;
-    }
-
-    protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
-    {
-        base.OnActivityResult(requestCode, resultCode, data);
-        if (requestCode != ActivateAdminRequest)
+        if (_dialogShown)
         {
             return;
         }
 
-        var policyManager = (DevicePolicyManager)GetSystemService(DevicePolicyService)!;
-        var admin = new ComponentName(this, Java.Lang.Class.FromType(typeof(LockDeviceAdminReceiver)));
-        if (policyManager.IsAdminActive(admin))
+        if (!OperatingSystem.IsAndroidVersionAtLeast(28))
         {
-            LockAndExit(policyManager);
+            ShowError(Resource.String.android_version_required);
+            return;
         }
-        else
-        {
-            Toast.MakeText(this, Resource.String.permission_required, ToastLength.Long)!.Show();
-            FinishAndRemoveTask();
-        }
-    }
 
-    private void LockAndExit(DevicePolicyManager policyManager)
-    {
-        try
+        var service = ScreenLockService.Current;
+        if (service is null)
         {
-            policyManager.LockNow();
-        }
-        catch (Java.Lang.SecurityException exception)
-        {
-            Log.Error(nameof(ScreenOff), exception.ToString());
+            if (_waitingForSettings)
+            {
+                Toast.MakeText(this, Resource.String.permission_required, ToastLength.Long)!.Show();
+                FinishAndRemoveTask();
+                return;
+            }
+
+            _dialogShown = true;
             new AlertDialog.Builder(this)!
-                .SetTitle(Resource.String.lock_failed)!
-                .SetMessage(Resource.String.permission_required)!
-                .SetPositiveButton(Android.Resource.String.Ok, (_, _) => FinishAndRemoveTask())!
+                .SetTitle(Resource.String.app_name)!
+                .SetMessage(Resource.String.accessibility_explanation)!
+                .SetPositiveButton(Resource.String.open_settings, (_, _) =>
+                {
+                    _dialogShown = false;
+                    _waitingForSettings = true;
+                    StartActivity(new Intent(Settings.ActionAccessibilitySettings));
+                })!
+                .SetNegativeButton(Android.Resource.String.Cancel, (_, _) => FinishAndRemoveTask())!
                 .SetOnCancelListener(new CloseListener(this))!
                 .Show();
             return;
         }
 
-        _lockRequested = true;
+        try
+        {
+            // Retain the old receiver only to revoke administrator access after an upgrade.
+            var policyManager = (DevicePolicyManager)GetSystemService(DevicePolicyService)!;
+            var admin = new ComponentName(this, Java.Lang.Class.FromType(typeof(LockDeviceAdminReceiver)));
+            if (policyManager.IsAdminActive(admin))
+            {
+                policyManager.RemoveActiveAdmin(admin);
+            }
+
+            if (!service.PerformGlobalAction(GlobalAction.LockScreen))
+            {
+                Log.Error(nameof(ScreenOff), "Android rejected the accessibility lock-screen action.");
+                ShowError(Resource.String.lock_action_failed);
+                return;
+            }
+
+            _lockRequested = true;
+        }
+        catch (Java.Lang.SecurityException exception)
+        {
+            Log.Error(nameof(ScreenOff), exception.ToString());
+            ShowError(Resource.String.lock_action_failed);
+        }
+    }
+
+    private void ShowError(int message)
+    {
+        _dialogShown = true;
+        new AlertDialog.Builder(this)!
+            .SetTitle(Resource.String.lock_failed)!
+            .SetMessage(message)!
+            .SetPositiveButton(Android.Resource.String.Ok, (_, _) => FinishAndRemoveTask())!
+            .SetOnCancelListener(new CloseListener(this))!
+            .Show();
     }
 
     private sealed class CloseListener(MainActivity activity) : Java.Lang.Object, IDialogInterfaceOnCancelListener

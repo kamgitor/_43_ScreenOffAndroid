@@ -4,20 +4,28 @@ Open ScreenOffAndroid.sln in Visual Studio with the .NET Android workload.
 The project is independent of cctt-test-tool and can be moved with this whole folder.
 Requires .NET 11 Android workload and Android 7.0 (API 24) or newer.
 
-Install and launch ScreenOff on an Android device. On first launch, explicitly
-activate its device administrator permission. The only requested policy is
-force-lock. After activation, launching the application locks the device and
-turns off its screen and removes the activity from recents. Android manages the
-application process after the activity closes. If permission is denied, the
-application explains why it cannot lock and closes.
+Locking requires Android 9 (API 28) or newer. On older supported installations,
+the application explains the limitation and does not fall back to administrator locking.
 
-This locks the device; it is not just a brightness change. Android requires the
-primary PIN/password/pattern after `DevicePolicyManager.LockNow()` before biometrics
-can be used again. This is enforced by Android and cannot be changed by the app.
-To uninstall, first deactivate ScreenOff under Settings > Security > Device admin
-apps (the exact settings path varies by manufacturer).
-Android may start the process again for system-delivered administrator events;
-this application does not install a background service, alarm or boot receiver.
+On first launch, read the disclosure and enable ScreenOff under Settings >
+Accessibility > Installed apps, then return to ScreenOff. If Android restricts
+this setting for a sideloaded APK, review App info > menu > Allow restricted settings
+before enabling it. Setting names vary by manufacturer. If the service is still
+connecting, reopen ScreenOff after a moment. Denying access leaves the device unlocked.
+
+The accessibility service only performs GLOBAL_ACTION_LOCK_SCREEN when ScreenOff
+is opened. It does not subscribe to accessibility events or request access to
+screen content. Android keeps this service connected in the background. The
+transparent launcher activity closes after unlocking; no alarm or boot receiver is used.
+
+This replaces DevicePolicyManager.LockNow(), which forced PIN/password/pattern
+entry with a device-policy message. The new action preserves normal biometric
+unlocking; Android can still require a PIN after restart, timeouts, failed attempts,
+or other system/security policies. Unlock once with the PIN after upgrading.
+On the first successful setup after an upgrade, ScreenOff removes its own old
+device administrator permission. The old receiver is retained only for migration.
+If uninstalling before setup, deactivate ScreenOff under Settings > Security >
+Device admin apps first. Disable the accessibility service to revoke its new access.
 
 Build:
   dotnet build ScreenOff\ScreenOff.csproj

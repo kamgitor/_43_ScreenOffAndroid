@@ -1,6 +1,10 @@
 ﻿<resources>
     <string name="app_name">ScreenOff</string>
-    <string name="admin_explanation">Allow ScreenOff to lock the screen when opened. No other administrator policies are requested.</string>
-    <string name="permission_required">ScreenOff needs device administrator permission to lock the screen. Enable it when opening the app again.</string>
+    <string name="accessibility_explanation">Enable ScreenOff in Accessibility settings to lock the screen without forcing a PIN on every unlock. This service only performs the system lock-screen action. It does not read screen content or monitor your interactions. After enabling it, return to ScreenOff.</string>
+    <string name="accessibility_description">Locks the screen when you open ScreenOff, without an administrator policy that forces a PIN. Does not read screen content or monitor interactions.</string>
+    <string name="open_settings">Open settings</string>
+    <string name="permission_required">The ScreenOff accessibility service is not connected. Enable it in Accessibility settings, wait a moment, then open ScreenOff again.</string>
+    <string name="android_version_required">Locking without forcing a PIN requires Android 9 or newer. ScreenOff will not use administrator locking on this device.</string>
+    <string name="lock_action_failed">Android could not lock the screen. Check that the ScreenOff accessibility service is enabled, then try again.</string>
     <string name="lock_failed">Could not lock the screen</string>
 </resources>
