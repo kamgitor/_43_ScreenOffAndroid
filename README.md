@@ -6,7 +6,8 @@ Requires .NET 11 Android workload and Android 7.0 (API 24) or newer.
 
 Launcher icons are generated from the root Icon.png, preserving its aspect ratio.
 All densities use a black background, including standard and round adaptive icons.
-Adaptive foreground artwork fits within Android's 66 dp safe circle on a 108 dp canvas.
+Adaptive foreground artwork is centered within a 66 dp square on a 108 dp canvas
+to keep the icon large; the launcher applies its standard or round mask.
 
 Locking requires Android 9 (API 28) or newer. On older supported installations,
 the application explains the limitation and does not fall back to administrator locking.
