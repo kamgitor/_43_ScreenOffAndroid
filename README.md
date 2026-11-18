@@ -1,8 +1,12 @@
-﻿ScreenOffAndroid
+ScreenOffAndroid
 
 Open ScreenOffAndroid.sln in Visual Studio with the .NET Android workload.
 The project is independent of cctt-test-tool and can be moved with this whole folder.
 Requires .NET 11 Android workload and Android 7.0 (API 24) or newer.
+
+Launcher icons are generated from the root Icon.png, preserving its aspect ratio.
+All densities use a black background, including standard and round adaptive icons.
+Adaptive foreground artwork fits within Android's 66 dp safe circle on a 108 dp canvas.
 
 Locking requires Android 9 (API 28) or newer. On older supported installations,
 the application explains the limitation and does not fall back to administrator locking.
