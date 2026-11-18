@@ -18,6 +18,10 @@ this setting for a sideloaded APK, review App info > menu > Allow restricted set
 before enabling it. Setting names vary by manufacturer. If the service is still
 connecting, reopen ScreenOff after a moment. Denying access leaves the device unlocked.
 
+Accessibility settings open in a separate system task and the ScreenOff setup
+activity closes immediately. After enabling access, go Home and open ScreenOff
+again; its launcher icon will not reopen the previous permission settings screen.
+
 The accessibility service only performs GLOBAL_ACTION_LOCK_SCREEN when ScreenOff
 is opened. It does not subscribe to accessibility events or request access to
 screen content. Android keeps this service connected in the background. The

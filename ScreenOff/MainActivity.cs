@@ -11,20 +11,17 @@ namespace ScreenOff;
     ExcludeFromRecents = true, Theme = "@style/ScreenOffTheme")]
 public class MainActivity : Activity
 {
-    private bool _waitingForSettings;
     private bool _lockRequested;
     private bool _dialogShown;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        _waitingForSettings = savedInstanceState?.GetBoolean("waitingForSettings") ?? false;
         _lockRequested = savedInstanceState?.GetBoolean("lockRequested") ?? false;
     }
 
     protected override void OnSaveInstanceState(Bundle outState)
     {
-        outState.PutBoolean("waitingForSettings", _waitingForSettings);
         outState.PutBoolean("lockRequested", _lockRequested);
         base.OnSaveInstanceState(outState);
     }
@@ -56,22 +53,16 @@ public class MainActivity : Activity
         var service = ScreenLockService.Current;
         if (service is null)
         {
-            if (_waitingForSettings)
-            {
-                Toast.MakeText(this, Resource.String.permission_required, ToastLength.Long)!.Show();
-                FinishAndRemoveTask();
-                return;
-            }
-
             _dialogShown = true;
             new AlertDialog.Builder(this)!
                 .SetTitle(Resource.String.app_name)!
                 .SetMessage(Resource.String.accessibility_explanation)!
                 .SetPositiveButton(Resource.String.open_settings, (_, _) =>
                 {
-                    _dialogShown = false;
-                    _waitingForSettings = true;
-                    StartActivity(new Intent(Settings.ActionAccessibilitySettings));
+                    // Keep system settings out of the task reopened by the launcher icon.
+                    StartActivity(new Intent(Settings.ActionAccessibilitySettings)
+                        .AddFlags(ActivityFlags.NewTask));
+                    FinishAndRemoveTask();
                 })!
                 .SetNegativeButton(Android.Resource.String.Cancel, (_, _) => FinishAndRemoveTask())!
                 .SetOnCancelListener(new CloseListener(this))!
