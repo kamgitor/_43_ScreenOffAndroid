@@ -4,7 +4,7 @@ using Android.Views.Accessibility;
 
 namespace ScreenOff;
 
-[Service(Name = "com.companyname.screenoff.ScreenLockService",
+[Service(Name = "AppsTheater.ScreenOff.ScreenLockService",
 	Label = "@string/app_name", Permission = "android.permission.BIND_ACCESSIBILITY_SERVICE",
 	Exported = true)]
 [IntentFilter(["android.accessibilityservice.AccessibilityService"])]
